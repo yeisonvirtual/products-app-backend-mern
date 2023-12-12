@@ -1,0 +1,48 @@
+const Product = require('../models/Product')
+
+async function addProduct (req, res) {
+  try {
+
+    const {
+      name,
+      size,
+      unitaryPrice,
+      description
+    } = req.body
+
+    const product = Product({
+      name,
+      size,
+      unitaryPrice,
+      description
+    })
+
+    if(req.file){
+      const { filename } = req.file
+      product.setImgUrl(filename)
+    }
+
+    const productStore = await product.save()
+
+    res.status(201).send({ productStore })
+
+  } catch (e) {
+    res.status(500).send({ message: e.message })
+  }
+}
+
+async function getProducts (req,res) {
+  try {
+
+    const products = await Product.find().lean().exec()
+    res.status(200).send({ products })
+    
+  } catch (e) {
+    res.status(500).send({ message: e.message })
+  }
+}
+
+module.exports = {
+  addProduct,
+  getProducts
+}
