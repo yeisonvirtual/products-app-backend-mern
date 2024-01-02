@@ -60,7 +60,6 @@ async function getProducts (req, res) {
 async function deleteProduct (req, res) {
 
   const { productID } = req.body;
-  console.log(req)
 
   try {
     
