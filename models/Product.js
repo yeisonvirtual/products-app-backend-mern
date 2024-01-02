@@ -7,7 +7,12 @@ const ProductSchema = Schema({
   size: Number,
   unitaryPrice: Number,
   imgUrl: String,
-  description: String
+  description: String,
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Users',
+    required: true
+  }
 }, {
   timestamps: true
 })
