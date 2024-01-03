@@ -29,7 +29,7 @@ app.use('/public', express.static(`${__dirname}/storage/imgs`))
 // ruta de auth
 app.use("/v1/auth-token", authTokenRouter);
 // ruta de products
-app.use('/v1', verifyToken, productRoutes);
+app.use('/v1/products', verifyToken, productRoutes);
 // ruta para verificar token
 app.use('/v1/verify', verify);
 

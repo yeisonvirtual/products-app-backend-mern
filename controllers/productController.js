@@ -1,4 +1,5 @@
-const Product = require('../models/Product')
+const Product = require('../models/Product');
+const fs = require('fs');
 
 async function addProduct (req, res) {
   try {
@@ -8,7 +9,7 @@ async function addProduct (req, res) {
       size,
       unitaryPrice,
       description
-    } = req.body
+    } = req.body;
 
     const product = Product({
       name,
@@ -16,67 +17,120 @@ async function addProduct (req, res) {
       unitaryPrice,
       description,
       user: req.user.id
-    })
+    });
 
     if(req.file){
-      const { filename } = req.file
-      product.setImgUrl(filename)
+      const { filename } = req.file;
+      product.setImgUrl(filename);
     }
 
-    const productStore = await product.save()
+    const productStore = await product.save();
 
-    res.status(201).json({ productStore })
+    return res.status(201).json({ productStore });
 
   } catch (e) {
-    res.status(500).json({ message: e.message })
+    return res.status(500).json({ message: e.message });
   }
 }
 
 async function getProductsUser (req,res) {
-  try {
 
+  try {
     // trae los datos del usuario
     const products = await Product.find({ user: req.user.id });
     
-    res.status(200).json({ products });
+    return res.status(200).json({ products });
     
   } catch (e) {
-    res.status(500).json({ message: e.message });
+    return res.status(500).json({ message: e.message });
   }
 }
 
 async function getProducts (req, res) {
+
   try {
 
     const products = await Product.find().populate('user').lean().exec();
     
-    res.status(200).json({ products });
+    return res.status(200).json({ products });
     
   } catch (e) {
-    res.status(500).json({ message: e.message });
+    return res.status(500).json({ message: e.message });
+  }
+}
+
+async function getProduct (req, res) {
+
+  const { id } = req.params;
+
+  try {
+
+    const product = await Product.findOne({ _id: id }).populate('user').exec();
+
+    return res.status(200).json({ product });
+    
+  } catch (e) {
+    return res.status(500).json({ message: e.message });
   }
 }
 
 async function deleteProduct (req, res) {
 
-  const { productID } = req.body;
+  const { id } = req.params;
 
   try {
-    
-    const deletedProduct = await Product.deleteOne({ _id: productID });
-    
-    if (!deletedProduct.deletedCount) return res.status(400).json({ message:'Producto no encontrado' });
 
-    res.status(200).json({ deletedProduct });
+    const deletedProduct = await Product.findOneAndDelete({ _id: id });
+
+    if (!deletedProduct) return res.status(400).json({ message:'No se pudo eliminar el producto' });
+
+    const subcadena = deletedProduct.imgUrl.split('/');
+
+    fs.unlink(`./storage/imgs/${subcadena[4]}`, (err)=>{
+      if (err) return console.log('No se encontro la imagen del producto');
+      console.log(`${subcadena[4]} fue eliminada`);
+    });
+
+    return res.status(200).json({ deletedProduct });
     
   } catch (e) {
-    res.status(500).json({ message: e.message });
+    return res.status(500).json({ message: e.message });
+  }
+}
+
+async function updateProduct (req, res) {
+  try {
+
+    const { id } = req.params;
+    
+    const {
+      name,
+      size,
+      unitaryPrice,
+      description
+    } = req.body;
+
+    const productOld = await Product.findOneAndUpdate({ _id: id },{
+      name,
+      size,
+      unitaryPrice,
+      description
+    });
+
+    const productUpdated = await Product.findOne({ _id: productOld._id });
+
+    return res.status(200).json({ productUpdated });
+
+  } catch (e) {
+    return res.status(500).json({ message: e.message });
   }
 }
 
 module.exports = {
   addProduct,
+  getProduct,
   getProductsUser,
   getProducts,
-  deleteProduct
+  deleteProduct,
+  updateProduct
 }

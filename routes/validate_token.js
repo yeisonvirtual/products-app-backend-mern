@@ -16,7 +16,7 @@ const verifyToken = async (req, res, next) => {
     
     // verifica el token
     const { payload } = await jwtVerify(token, secret);
-
+    
     // se actualiza la fecha de expiracion
     //payload.exp = Date.now() + 300000; // 5 minutos => 5 (min) * 60 (seg) * 1.000 (mili) = 300000
 
