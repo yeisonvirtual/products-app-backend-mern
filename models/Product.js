@@ -3,11 +3,29 @@ const { appConfig } = require('../config')
 const Schema = mongoose.Schema
 
 const ProductSchema = Schema({
-  name: String,
-  size: Number,
-  unitaryPrice: Number,
-  imgUrl: String,
-  description: String,
+  name: {
+    type: String,
+    required: true,
+    trim: true // elimina los espacios
+  },
+  size: {
+    type: String,
+    trim: true // elimina los espacios
+  },
+  unitaryPrice: {
+    type: Number,
+    required: true,
+    trim: true
+  },
+  imgUrl: {
+    type: String,
+    required: true,
+    trim: true // elimina los espacios
+  },
+  description: {
+    type: String,
+    trim: true // elimina los espacios
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Users',
@@ -18,8 +36,8 @@ const ProductSchema = Schema({
 })
 
 ProductSchema.methods.setImgUrl = function setImgUrl(filename){
-  const { host, port } = appConfig
-  this.imgUrl = `${host}:${port}/public/${filename}`
+  const { host, port } = appConfig;
+  this.imgUrl = `${host}:${port}/public/${filename}`;
 }
 
-module.exports = mongoose.model('Products', ProductSchema)
+module.exports = mongoose.model('Products', ProductSchema);

@@ -1,30 +1,30 @@
-const express = require('express')
-const bodyParser = require('body-parser')
-const productRoutes = require('./routes/product')
-const cors = require('cors')
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
 const verifyToken = require('./routes/validate_token');
 const verify = require('./routes/verify');
 
-//const userRouter = require('./routes/user');
+const userRouter = require('./routes/user');
+const productRoutes = require('./routes/product');
 const authTokenRouter = require('./routes/auth_token');
 
-const app = express()
+const app = express();
 
 // para permitir solicitudes desde otro puerto de 5173 a 8080
 app.use(cors({
   origin: 'http://localhost:5173', // dominio app frontend
   credentials: true // permite enviar cookies
-}))
+}));
 
 // para acceder al body de la consulta
-app.use(bodyParser.urlencoded({ extended: false }))
-app.use(bodyParser.json())
-app.use(cookieParser())
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+app.use(cookieParser());
 
 // para acceder a las imagenes
-app.use('/public', express.static(`${__dirname}/storage/imgs`))
+app.use('/public', express.static(`${__dirname}/storage/imgs`));
 
 // ruta de auth
 app.use("/v1/auth-token", authTokenRouter);
@@ -32,8 +32,7 @@ app.use("/v1/auth-token", authTokenRouter);
 app.use('/v1/products', verifyToken, productRoutes);
 // ruta para verificar token
 app.use('/v1/verify', verify);
-
 // ruta de users
-//app.use('/v1/users', userRouter)
+app.use('/v1/users', userRouter);
 
-module.exports = app
+module.exports = app;

@@ -50,7 +50,10 @@ async function getProducts (req, res) {
 
   try {
 
-    const products = await Product.find().populate('user').lean().exec();
+    // lean -> retorna como objeto js, sort -> ordena
+    const products = await Product.find().populate('user').sort({
+      unitaryPrice: 1 // orden ascendente
+    }).lean();
     
     return res.status(200).json({ products });
     
@@ -80,14 +83,16 @@ async function deleteProduct (req, res) {
 
   try {
 
+    // elimina de la BDD
     const deletedProduct = await Product.findOneAndDelete({ _id: id });
 
-    if (!deletedProduct) return res.status(400).json({ message:'No se pudo eliminar el producto' });
+    if (!deletedProduct) return res.status(400).json({ message:'No se encontró el producto' });
 
+    // elimina la imagen de storage/imgs
     const subcadena = deletedProduct.imgUrl.split('/');
 
     fs.unlink(`./storage/imgs/${subcadena[4]}`, (err)=>{
-      if (err) return console.log('No se encontro la imagen del producto');
+      if (err) return console.log('No se encontró la imagen del producto');
       console.log(`${subcadena[4]} fue eliminada`);
     });
 
@@ -110,14 +115,19 @@ async function updateProduct (req, res) {
       description
     } = req.body;
 
-    const productOld = await Product.findOneAndUpdate({ _id: id },{
+    const productUpdated = await Product.findOneAndUpdate({ _id: id },{
       name,
       size,
       unitaryPrice,
       description
+    },
+    {
+      new: true
     });
 
-    const productUpdated = await Product.findOne({ _id: productOld._id });
+    if (!productUpdated) return res.status(400).json({ message:'No se encontró el producto' });
+
+    //const productUpdated = await Product.findOne({ _id: productOld._id });
 
     return res.status(200).json({ productUpdated });
 
