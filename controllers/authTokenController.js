@@ -2,6 +2,8 @@ const User = require('../models/User');
 const bcrypt = require("bcryptjs");
 const { SignJWT } = require('jose');
 
+const { Resend } = require('resend');
+
 async function register (req, res) {
 
   const {
@@ -32,6 +34,21 @@ async function register (req, res) {
         
     const newUser = await user.save();
 
+    const resend = new Resend('re_CqXVzKgL_8hfuAniKeiS8QZX6WE9aneHs');
+
+    const data = await resend.emails.send({
+      from: 'products_app@resend.dev',
+      to: 'yeisonjr98@gmail.com',
+      subject: 'Products App: Verifique su correo',
+      html: 
+      `<p>Este usuario se registro en la página <strong>Products App</strong> de <strong>Yeison Rojas</strong>.</p>
+       <p>Verifique su cuenta en el siguente link:</p>
+       <a href='http://localhost:5173/login/${newUser._id}'>Confirmar usuario</a>
+      `
+    });
+
+    if (!data) return res.status(409).json({ message: 'No se pudo enviar el correo' });
+
     // 201 - Created
     return res.status(201).json({ newUser });
 
@@ -54,6 +71,10 @@ async function login (req, res) {
     const user = await User.findOne({ email }); // comprueba que el usuario exista
     
 	  if (!user) return res.status(400).json({ message:'Usuario no encontrado' });
+
+    if (!user.verified) return res.status(400).json({ message:'Usuario no verificado' });
+
+    if (!user.active) return res.status(400).json({ message:'Usuario inactivo' });
 
     // compara la password
     const validPassword = await bcrypt.compare(password, user.password);
@@ -85,7 +106,7 @@ async function login (req, res) {
         
       }); // agregar a la cookie de la respuesta
 
-      return res.status(201).json(user);;
+      return res.status(201).json(user);
 
     } else {
 
@@ -102,12 +123,6 @@ async function login (req, res) {
 }
 
 async function logout (req, res) {
-  // obtiene el header
-  // const { authorization } =  req.headers;
-
-  // if (!authorization) return res.status(401).send({ message: 'Usuario no logeado'});
-
-  //res.set('authorization', '');
 
   res.cookie('token', '',{
     expires: new Date(0)

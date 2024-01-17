@@ -34,50 +34,75 @@ async function getUsers (req, res) {
     // expresion regular para buscar todos los documentos que contengan value en la cadena
     const regex = new RegExp(`${value}`, 'i');
 
-    if (value==='' || field==='0') {
+    if (field!=='0' && value!=='') {
 
-      const users = await User.paginate({}, options);
+      if (field==='1') {
 
-      if (!users.docs.length) {
-        return res.status(400).json({ message:'Página vacia' });
-      }
+        const users = await User.paginate({name: regex}, options);
   
-      return res.status(200).send({ users });
-
-    } 
-    else if (field==='1') {
-
-      const users = await User.paginate({name: regex}, options);
-
-      if (!users.docs.length) {
-        return res.status(400).json({ message:'Página vacia' });
-      }
+        if (!users.docs.length) {
+          return res.status(400).json({ message:'Página vacia' });
+        }
+    
+        return res.status(200).send({ users });
   
-      return res.status(200).send({ users });
-
-    }
-    else if (field==='2') {
-      
-      const users = await User.paginate({email: regex}, options);
-
-      if (!users.docs.length) {
-        return res.status(400).json({ message:'Página vacia' });
       }
+      else if (field==='2') {
+        
+        const users = await User.paginate({email: regex}, options);
   
-      return res.status(200).send({ users });
-
-    }
-    else if (field==='3') {
-      
-      const users = await User.paginate({type: regex}, options);
-
-      if (!users.docs.length) {
-        return res.status(400).json({ message:'Página vacia' });
+        if (!users.docs.length) {
+          return res.status(400).json({ message:'Página vacia' });
+        }
+    
+        return res.status(200).send({ users });
+  
       }
+      else if (field==='3') {
+        
+        const users = await User.paginate({type: regex}, options);
   
-      return res.status(200).send({ users });
+        if (!users.docs.length) {
+          return res.status(400).json({ message:'Página vacia' });
+        }
+    
+        return res.status(200).send({ users });
+  
+      }
+      else if (field==='4') {
 
-  } else {
+        let active = null;
+
+        if (value==='1') active = true;
+        else if (value==='0') active = false;
+        
+        const users = await User.paginate({active}, options);
+  
+        if (!users.docs.length) {
+          return res.status(400).json({ message:'Página vacia' });
+        }
+    
+        return res.status(200).send({ users });
+  
+      }
+      else if (field==='5') {
+
+        let verified = null;
+
+        if (value==='1') verified = true;
+        else if (value==='0') verified = false;
+        
+        const users = await User.paginate({verified}, options);
+  
+        if (!users.docs.length) {
+          return res.status(400).json({ message:'Página vacia' });
+        }
+    
+        return res.status(200).send({ users });
+  
+      }
+
+    } else {
 
       const users = await User.paginate({}, options);
 
@@ -94,19 +119,6 @@ async function getUsers (req, res) {
     return res.status(500).send({ message: e.message });
   }
 }
-
-// async function getUsers (req, res) {
-
-//   try {
-
-//     const users = await User.find().lean().exec();
-//     return res.status(200).send({ users });
-    
-//   } catch (e) {
-//     // 500 - Internal Server Error
-//     return res.status(500).send({ message: e.message });
-//   }
-// }
 
 async function deleteUser (req, res) {
 
@@ -134,8 +146,13 @@ async function updateUser (req, res) {
     const {
       name,
       email,
-      type
+      type,
+      active
     } = req.body;
+
+    // convertir string a booleano
+    let activeBool = false;
+    if (active==='true') activeBool = true;
 
     const user = await User.findOne({ _id: id });
     
@@ -150,7 +167,9 @@ async function updateUser (req, res) {
       const userUpdated = await User.findOneAndUpdate({ _id: user._id },{
         name,
         email,
-        type
+        type,
+        active: activeBool,
+        verified: false
       },
       {
         new: true
@@ -162,7 +181,8 @@ async function updateUser (req, res) {
 
     const userUpdated = await User.findOneAndUpdate({ _id: id },{
       name,
-      type
+      type,
+      active: activeBool
     },
     {
       new: true
@@ -175,9 +195,37 @@ async function updateUser (req, res) {
   }
 }
 
+async function verifyEmail (req, res) {
+  
+  const { id } = req.params;
+
+  try {
+
+    const user = await User.findOne({ _id: id });
+    // si el link ya fue utilizado
+    if (user.verified) return res.status(400).json({ message:'El link ya expiró' });
+
+    const verifiedUser = await User.findOneAndUpdate({ _id: id },{
+      active: true,
+      verified: true
+    },
+    {
+      new: true
+    });
+
+    return res.status(200).send({ verifiedUser });
+    
+  } catch (e) {
+    // 500 - Internal Server Error
+    return res.status(500).send({ message: e.message });
+  }
+
+}
+
 module.exports = {
   getUser,
   getUsers,
   deleteUser,
-  updateUser
+  updateUser,
+  verifyEmail
 }

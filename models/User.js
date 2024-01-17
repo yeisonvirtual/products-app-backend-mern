@@ -10,9 +10,10 @@ const UserSchema = Schema({
   },
   email: {
     type: String,
-    required: true,
     trim: true,
-    unique: true // unico
+    required: true,
+    unique: true, // unico
+    lowercase: true
   },
   password: {
     type: String,
@@ -22,6 +23,14 @@ const UserSchema = Schema({
   type: {
     type: String,
     default: 'guest'
+  },
+  active: {
+    type: Boolean,
+    default: false
+  },
+  verified: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

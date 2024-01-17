@@ -2,14 +2,17 @@ const Product = require('../models/Product');
 const fs = require('fs');
 
 async function addProduct (req, res) {
-  try {
+  
+  const {
+    name,
+    size,
+    unitaryPrice,
+    description
+  } = req.body;
 
-    const {
-      name,
-      size,
-      unitaryPrice,
-      description
-    } = req.body;
+  if (!name || !unitaryPrice || !req.file) return res.status(409).json({ message: 'Faltan datos' });
+
+  try {
 
     const product = Product({
       name,
